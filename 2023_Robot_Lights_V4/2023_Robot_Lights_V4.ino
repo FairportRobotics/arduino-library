@@ -57,6 +57,9 @@ int delayval = 500; // delay milli seconds
 char command[12];       //Space for extra characters (only 4-6 are needed)
 #define SERIALPOS 9
 
+void fillAll(char* redValue, char* greenValue, char* blueValue);
+void fillRainbow();
+void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueValue);
 
 //==============================================================
 void setup()
@@ -124,15 +127,16 @@ void parseSerialCommand()
   memcpy(blueValue, &command[6], 3);
 
   lightString_0.clear();
-  if ( atoi(&command[SERIALPOS]) == 255)
+  if ( atoi(&command[SERIALPOS]) == 255 )
   {
-    lightString_0.fill(lightString_0.Color(atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255), 0, numPixels[0]);
-    lightString_0.show();
+    fillAll(redValue, greenValue, blueValue);
+  }
+  else if ( atoi(&command[SERIALPOS]) == 254 )
+  {
+    fillRainbow();      
   }
   else {
-    //If only the first LED turns on, a null is being read as a zero
-    lightString_0.setPixelColor(atoi(&command[SERIALPOS]), atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255);
-    lightString_0.show();
+    setSpecificLED(command, redValue, greenValue, blueValue);
   }
 
   //Get the string number to test
@@ -312,4 +316,22 @@ int randomNum(int maxNum)
   */
   return x;    //return LED index (1 to maxNum; index 0 is all off)
 
+}
+//=========================-Functions-=================================
+
+void fillAll(char* redValue, char* greenValue, char* blueValue)
+{
+  lightString_0.fill(lightString_0.Color(atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255), 0, numPixels[0]);
+  lightString_0.show();
+}
+void fillRainbow()
+{
+  lightString_0.rainbow(0, 10);
+  lightString_0.show();
+}
+void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueValue)
+{
+  //If only the first LED turns on, a null is being read as a zero
+  lightString_0.setPixelColor(atoi(&command[SERIALPOS]), atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255);
+  lightString_0.show();
 }
