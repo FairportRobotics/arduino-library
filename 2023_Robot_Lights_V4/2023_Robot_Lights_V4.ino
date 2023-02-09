@@ -53,6 +53,10 @@ Adafruit_NeoPixel lightString_2 = Adafruit_NeoPixel(numPixels[2], outputPin[2], 
 
 int delayval = 500; // delay milli seconds
 
+char redValue[4] = {};
+char greenValue[4] = {};
+char blueValue[4] = {};
+
 //Command from serial port...
 char command[12];       //Space for extra characters (only 4-6 are needed)
 #define SERIALPOS 9
@@ -60,6 +64,8 @@ char command[12];       //Space for extra characters (only 4-6 are needed)
 void fillAll(char* redValue, char* greenValue, char* blueValue);
 void fillRainbow();
 void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueValue);
+void switchGradient(char* command, char* redValue, char* greenValue, char* blueValue);
+void getInputColors(char* command, char* redValue, char* greenValue, char* blueValue);
 
 //==============================================================
 void setup()
@@ -113,29 +119,33 @@ void parseSerialCommand()
   Serial.println("-----------------------------");
   Serial.print("Command = ");
   Serial.println(command);
+
   
   if ( strlen(command) < SERIALPOS + 1 )
   {
     return -1;
   }
-  //Allocate memory for rgb values in received string
-  char redValue[4] = {};
-  char greenValue[4] = {};
-  char blueValue[4] = {};
-  memcpy(redValue, &command[0], 3);
-  memcpy(greenValue, &command[3], 3);
-  memcpy(blueValue, &command[6], 3);
 
-  lightString_0.clear();
+
   if ( atoi(&command[SERIALPOS]) == 255 )
   {
+    lightString_0.clear();
+    getInputColors(command, redValue, greenValue, blueValue);
     fillAll(redValue, greenValue, blueValue);
   }
   else if ( atoi(&command[SERIALPOS]) == 254 )
   {
+    lightString_0.clear();
     fillRainbow();      
   }
-  else {
+  else if ( atoi(&command[SERIALPOS]) == 253 )
+  {
+    switchGradient(command, redValue, greenValue, blueValue);
+  }
+  else
+  {
+    lightString_0.clear();
+    getInputColors(command, redValue, greenValue, blueValue);
     setSpecificLED(command, redValue, greenValue, blueValue);
   }
 
@@ -323,7 +333,6 @@ void fillAll(char* redValue, char* greenValue, char* blueValue)
 {
   lightString_0.fill(lightString_0.Color(atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255), 0, numPixels[0]);
   lightString_0.show();
-  Serial.println("Success!");
 }
 void fillRainbow()
 {
@@ -335,4 +344,61 @@ void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueV
   //If only the first LED turns on, a null is being read as a zero
   lightString_0.setPixelColor(atoi(&command[SERIALPOS]), atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255);
   lightString_0.show();
+}
+void switchGradient(char* command, char* redValue, char* greenValue, char* blueValue)
+{
+  int i;
+  char backupCommand[12] = {};
+  for ( i = 0; i <= 12; i++ ) {
+    backupCommand[i] = command[i];
+  }
+  //Declare values of what color should end up as
+  char redFinal[4] = {};
+  char greenFinal[4] = {};
+  char blueFinal[4] = {};
+  memcpy(redFinal, &backupCommand[0], 3);
+  memcpy(greenFinal, &backupCommand[3], 3);
+  memcpy(blueFinal, &backupCommand[6], 3);
+  //Define value to increment by determined by whether the final value is greater than or less than the current value
+  //The first number is a multiplier for how fast you want colors to fade
+  //All colors being switched to **MUST** be a multiple of this first number
+  int redIncrement = ( atoi(redFinal) - atoi(redValue) ) / abs(atoi(redFinal) - atoi(redValue)) * 5;
+  int greenIncrement = ( atoi(greenFinal) - atoi(greenValue) ) / abs(atoi(greenFinal) - atoi(greenValue)) * 5;
+  int blueIncrement = ( atoi(blueFinal) - atoi(blueValue) ) / abs(atoi(blueFinal) - atoi(blueValue)) * 5;
+  //Check just in case a value is equivalent to would it should end up as
+  atoi(redFinal) == atoi(redValue) ? redIncrement = 0: redIncrement = redIncrement;
+  atoi(greenFinal) == atoi(greenValue) ? greenIncrement = 0: greenIncrement = greenIncrement;
+  atoi(blueFinal) == atoi(blueValue) ? blueIncrement = 0: blueIncrement = blueIncrement;
+  i = 0;
+  int redColor = atoi(redValue) + ( i * redIncrement);
+  int greenColor = atoi(greenValue) + ( i * greenIncrement);
+  int blueColor = atoi(blueValue) + ( i * blueIncrement);
+  while ( redColor != atoi(redFinal) || greenColor != atoi(greenFinal) || blueColor != atoi(blueFinal) ) {
+    i++;      
+    if ( redColor != atoi(redFinal) ) {
+      redColor = atoi(redValue) + ( i * redIncrement);        
+      lightString_0.fill(lightString_0.Color( greenColor, redColor, blueColor), 0, numPixels[0]);
+      lightString_0.show();
+    }   
+    if ( greenColor != atoi(greenFinal) ) {
+      greenColor = atoi(greenValue) + ( i * greenIncrement);
+      lightString_0.fill(lightString_0.Color( greenColor, redColor, blueColor), 0, numPixels[0]);
+      lightString_0.show();
+    }
+    if ( blueColor != atoi(blueFinal) ) {
+      blueColor = atoi(blueValue) + ( i * blueIncrement);
+      lightString_0.fill(lightString_0.Color( greenColor, redColor, blueColor), 0, numPixels[0]);
+      lightString_0.show();
+    }
+  }
+  //Set values as what color the LEDs have ended up as
+  memcpy(redValue, &command[0], 3);
+  memcpy(greenValue, &command[3], 3);
+  memcpy(blueValue, &command[6], 3);
+}
+void getInputColors(char* command, char* redValue, char* greenValue, char* blueValue)
+{
+  memcpy(redValue, &command[0], 3);
+  memcpy(greenValue, &command[3], 3);
+  memcpy(blueValue, &command[6], 3);
 }
