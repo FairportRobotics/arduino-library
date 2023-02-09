@@ -29,3 +29,4 @@ However, if the last byte of information isn't a value 0-149, it either will qui
 	
 	255 - fillAll: this function sets all LEDSs to the specified to color
 	254 - fillRainbow: this function sets all LEDs to a rainbow (regardless of any information that precedes it)
+	253 - switchGradient: this function will gradient the current color of all LEDs to the specified color
