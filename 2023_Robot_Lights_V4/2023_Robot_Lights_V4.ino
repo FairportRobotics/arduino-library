@@ -323,6 +323,7 @@ void fillAll(char* redValue, char* greenValue, char* blueValue)
 {
   lightString_0.fill(lightString_0.Color(atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255), 0, numPixels[0]);
   lightString_0.show();
+  Serial.println("Success!");
 }
 void fillRainbow()
 {
