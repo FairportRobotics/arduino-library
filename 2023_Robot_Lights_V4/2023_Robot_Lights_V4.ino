@@ -70,6 +70,7 @@ void getInputColors(char* command, char* redValue, char* greenValue, char* blueV
 void fillShift(char* command, char* redValue, char* greenValue, char* blueValue);
 void shift();
 void shiftWrap();
+void flash(char* command, char* redValue, char* greenValue, char* blueValue);
 //==============================================================
 void setup()
 //==============================================================
@@ -157,6 +158,10 @@ void parseSerialCommand()
   else if ( atoi(&command[SERIALPOS]) == 250 )
   {
     shiftWrap();  
+  }
+  else if ( atoi(&command[SERIALPOS]) == 249 )
+  {
+    flash(command, redValue, greenValue, blueValue);
   }
   else
   {
@@ -450,5 +455,29 @@ void shiftWrap()
         break;
       }
       delay(35);
+  }
+}
+void flash(char* command, char* redValue, char* greenValue, char* blueValue)
+{
+  char redValueNew[4] = {};
+  char greenValueNew[4] = {};
+  char blueValueNew[4] = {};
+  memcpy(redValueNew, &command[0], 3);
+  memcpy(greenValueNew, &command[3], 3);
+  memcpy(blueValueNew, &command[6], 3);
+
+  while ( ! Serial.available() ) {
+    lightString_0.fill(lightString_0.Color(atoi(greenValueNew), atoi(redValueNew), atoi(blueValueNew)), 0, numPixels[0]);
+    lightString_0.show();
+    if ( Serial.available() ) {
+      break;
+    }
+    delay(650);
+    if ( Serial.available() ) {
+      break;
+    }
+    lightString_0.fill(lightString_0.Color(atoi(greenValue), atoi(redValue), atoi(blueValue)), 0, numPixels[0]);
+    lightString_0.show();
+    delay(650);
   }
 }
