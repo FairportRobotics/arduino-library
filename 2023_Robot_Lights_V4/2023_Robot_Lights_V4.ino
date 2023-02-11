@@ -52,6 +52,7 @@ Adafruit_NeoPixel lightString_1 = Adafruit_NeoPixel(numPixels[1], outputPin[1], 
 Adafruit_NeoPixel lightString_2 = Adafruit_NeoPixel(numPixels[2], outputPin[2], NEO_GRB + NEO_KHZ800);
 
 int delayval = 500; // delay milli seconds
+int i;
 
 char redValue[4] = {};
 char greenValue[4] = {};
@@ -66,7 +67,7 @@ void fillRainbow();
 void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueValue);
 void switchGradient(char* command, char* redValue, char* greenValue, char* blueValue);
 void getInputColors(char* command, char* redValue, char* greenValue, char* blueValue);
-
+void fillShift(char* command, char* redValue, char* greenValue, char* blueValue);
 //==============================================================
 void setup()
 //==============================================================
@@ -142,9 +143,38 @@ void parseSerialCommand()
   {
     switchGradient(command, redValue, greenValue, blueValue);
   }
+  else if ( atoi(&command[SERIALPOS]) == 252 )
+  {
+    memcpy(redValue, &command[0], 3);
+    memcpy(greenValue, &command[3], 3);
+    memcpy(blueValue, &command[6], 3);   
+    fillShift(command, redValue, greenValue, blueValue);
+  } 
+  else if ( atoi(&command[SERIALPOS]) == 251)
+  {
+    for ( i = 0; i <= numPixels[0]; i++ ) {
+      for ( i = numPixels[0]; i > 0; i-- ) {
+        lightString_0.setPixelColor(i, lightString_0.getPixelColor(i - 1));   
+      }
+      lightString_0.setPixelColor(0, lightString_0.getPixelColor( (numPixels[0]) ));
+      lightString_0.show();
+      delay(50);
+    }  
+  }
+  else if ( atoi(&command[SERIALPOS]) == 250 )
+  {
+    for ( i = 0; i <= numPixels[0]; i++ ) {
+      for ( i = numPixels[0]; i > 0; i-- ) {
+        lightString_0.setPixelColor(i, lightString_0.getPixelColor(i - 1));   
+      }
+      lightString_0.setPixelColor(0, lightString_0.getPixelColor( (numPixels[0]) - 1 ));
+      lightString_0.show();
+      delay(50);
+    }  
+  }
   else
   {
-    lightString_0.clear();
+    //lightString_0.clear();
     getInputColors(command, redValue, greenValue, blueValue);
     setSpecificLED(command, redValue, greenValue, blueValue);
   }
@@ -347,7 +377,7 @@ void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueV
 }
 void switchGradient(char* command, char* redValue, char* greenValue, char* blueValue)
 {
-  int i;
+  //int i;
   char backupCommand[12] = {};
   for ( i = 0; i <= 12; i++ ) {
     backupCommand[i] = command[i];
@@ -401,4 +431,13 @@ void getInputColors(char* command, char* redValue, char* greenValue, char* blueV
   memcpy(redValue, &command[0], 3);
   memcpy(greenValue, &command[3], 3);
   memcpy(blueValue, &command[6], 3);
+}
+
+void fillShift( char* command, char* redValue, char* greenValue, char* blueValue)
+{
+  //int i;  
+  for ( i = 1; i <= numPixels[0]; i++ ) {
+    lightString_0.fill(lightString_0.Color(atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255), 0, i );
+    lightString_0.show();
+  }  
 }
