@@ -25,8 +25,11 @@ ex. '000 255 000 001' is the same as '000 255 000 1'
 
 ==========
 
-However, if the last byte of information isn't a value 0-149, it either will quit without doing anything, or run a function associated with that particular value. The full list of values with assigned functions are as follows:
+However, if the last byte of information isn't a value 0-149, it either will quit without doing anything, or run a function associated with that particular value.(Functions that disregard the color information and only care about the last byte are marked with an *). The full list of values with assigned functions are as follows:
 	
-	255 - fillAll: this function sets all LEDSs to the specified to color
-	254 - fillRainbow: this function sets all LEDs to a rainbow (regardless of any information that precedes it)
-	253 - switchGradient: this function will gradient the current color of all LEDs to the specified color
+	 255 - fillAll: this function sets all LEDSs to the specified to color
+	*254*- fillRainbow: this function sets all LEDs to a rainbow (regardless of any information that precedes it)
+	 253 - switchGradient: this function will gradient the current color of all LEDs to the specified color
+	 252 - fillShift: this function changes colors by having the specified color 'slide' into place
+	*251*- shift: this function will have whatever LEDs currently lit shift down towards the end of the strip with no wraparound
+	*250*- shiftWrap: this function does the exact same as function '251', but with a wraparound
