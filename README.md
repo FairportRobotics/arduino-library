@@ -33,3 +33,4 @@ However, if the last byte of information isn't a value 0-149, it either will qui
 	 252 - fillShift: this function changes colors by having the specified color 'slide' into place
 	*251*- shift: this function will have whatever LEDs currently lit shift down towards the end of the strip with no wraparound
 	*250*- shiftWrap: this function does the exact same as function '251', but with a wraparound
+	 249 - flash: this function flashes back and forth between the current color and the specified color
