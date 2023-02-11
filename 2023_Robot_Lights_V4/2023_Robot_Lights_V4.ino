@@ -1,4 +1,4 @@
-
+// IF THE LEDs ARE ACTING REALLY STRANGE FOR SEEMINGLY NEW REASON, TRY A NEW BATTERY
 /*
    1/31/23
    Program to drive up to 3 serial chains of RGB LEDs.
@@ -68,6 +68,8 @@ void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueV
 void switchGradient(char* command, char* redValue, char* greenValue, char* blueValue);
 void getInputColors(char* command, char* redValue, char* greenValue, char* blueValue);
 void fillShift(char* command, char* redValue, char* greenValue, char* blueValue);
+void shift();
+void shiftWrap();
 //==============================================================
 void setup()
 //==============================================================
@@ -130,13 +132,11 @@ void parseSerialCommand()
 
   if ( atoi(&command[SERIALPOS]) == 255 )
   {
-    lightString_0.clear();
     getInputColors(command, redValue, greenValue, blueValue);
     fillAll(redValue, greenValue, blueValue);
   }
   else if ( atoi(&command[SERIALPOS]) == 254 )
   {
-    lightString_0.clear();
     fillRainbow();      
   }
   else if ( atoi(&command[SERIALPOS]) == 253 )
@@ -149,32 +149,17 @@ void parseSerialCommand()
     memcpy(greenValue, &command[3], 3);
     memcpy(blueValue, &command[6], 3);   
     fillShift(command, redValue, greenValue, blueValue);
-  } 
+  }
   else if ( atoi(&command[SERIALPOS]) == 251)
   {
-    for ( i = 0; i <= numPixels[0]; i++ ) {
-      for ( i = numPixels[0]; i > 0; i-- ) {
-        lightString_0.setPixelColor(i, lightString_0.getPixelColor(i - 1));   
-      }
-      lightString_0.setPixelColor(0, lightString_0.getPixelColor( (numPixels[0]) ));
-      lightString_0.show();
-      delay(50);
-    }  
+    shift();
   }
   else if ( atoi(&command[SERIALPOS]) == 250 )
   {
-    for ( i = 0; i <= numPixels[0]; i++ ) {
-      for ( i = numPixels[0]; i > 0; i-- ) {
-        lightString_0.setPixelColor(i, lightString_0.getPixelColor(i - 1));   
-      }
-      lightString_0.setPixelColor(0, lightString_0.getPixelColor( (numPixels[0]) - 1 ));
-      lightString_0.show();
-      delay(50);
-    }  
+    shiftWrap();  
   }
   else
   {
-    //lightString_0.clear();
     getInputColors(command, redValue, greenValue, blueValue);
     setSpecificLED(command, redValue, greenValue, blueValue);
   }
@@ -377,7 +362,6 @@ void setSpecificLED(char* command, char* redValue, char* greenValue, char* blueV
 }
 void switchGradient(char* command, char* redValue, char* greenValue, char* blueValue)
 {
-  //int i;
   char backupCommand[12] = {};
   for ( i = 0; i <= 12; i++ ) {
     backupCommand[i] = command[i];
@@ -435,9 +419,36 @@ void getInputColors(char* command, char* redValue, char* greenValue, char* blueV
 
 void fillShift( char* command, char* redValue, char* greenValue, char* blueValue)
 {
-  //int i;  
   for ( i = 1; i <= numPixels[0]; i++ ) {
     lightString_0.fill(lightString_0.Color(atoi(&greenValue[0]), atoi(&redValue[0]), atoi(&blueValue[0]), 255), 0, i );
     lightString_0.show();
+  }
+}
+void shift()
+{
+  for ( i = 0; i <= numPixels[0]; i++ ) {
+      for ( i = numPixels[0]; i > 0; i-- ) {
+        lightString_0.setPixelColor(i, lightString_0.getPixelColor(i - 1));   
+      }
+      lightString_0.setPixelColor(0, lightString_0.getPixelColor( (numPixels[0]) ));
+      lightString_0.show();
+      if ( Serial.available() ) {
+        break;
+      }
+      delay(35);
   }  
+}
+void shiftWrap()
+{
+  for ( i = 0; i <= numPixels[0]; i++ ) {
+      for ( i = numPixels[0]; i > 0; i-- ) {
+        lightString_0.setPixelColor(i, lightString_0.getPixelColor(i - 1));   
+      }
+      lightString_0.setPixelColor(0, lightString_0.getPixelColor( (numPixels[0]) - 1 ));
+      lightString_0.show();
+      if ( Serial.available() ) {
+        break;
+      }
+      delay(35);
+  }
 }
